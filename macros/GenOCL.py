@@ -101,31 +101,58 @@ def associationsInPackage(package):
 # examples
 
 def umlEnumeration2OCL(enumeration):
-    """
-    Generate USE OCL code for the enumeration
-    """
+	print "enum " + enumeration.name + " {"
+	t = ""
+	for v in enumeration.value:
+		t += "\t" + v.name + ",\n"
+	print t[:-2] + "\n}"
 
 def umlBasicType2OCL(basicType):
-    """
-    Generate USE OCL basic type. Note that
-    type conversions are required.
-    """
+	t = basicType.name
+	if (t == "string"):	
+		return "String"
+	elif (t == "integer"):	
+		return "Integer"
+	elif (t == "float"):	
+		return "Real"
+	elif (t == "boolean"):	
+		return "Boolean"
+	else:
+		return t
     
-# etc.
+def umlClass2OCL(umlClass):
+	h = ""
+	if len(umlClass.parent) > 0:
+		h = " < " + umlClass.parent[0].getSuperType().name	
+	print "class " + umlClass.name + h 
+	print "attributes"
+	for a in umlClass.ownedAttribute:
+		print "\t" + a.name + " : " + umlBasicType2OCL(a.type) + (" -- @derived" if a.isDerived else "")
+	print "end"
 
 def package2OCL(package):
-    """
-    Generate a complete OCL specification for a given package.
-    The inner package structure is ignored. That is, all
-    elements useful for USE OCL (enumerations, classes, 
-    associationClasses, associations and invariants) are looked
-    recursively in the given package and output in the OCL
-    specification. The possibly nested package structure that
-    might exist is not reflected in the USE OCL specification
-    as USE is not supporting the concept of package.
-    """
+	"""
+	Generate a complete OCL specification for a given package.
+	The inner package structure is ignored. That is, all
+	elements useful for USE OCL (enumerations, classes, 
+	associationClasses, associations and invariants) are looked
+	recursively in the given package and output in the OCL
+	specification. The possibly nested package structure that
+	might exist is not reflected in the USE OCL specification
+	as USE is not supporting the concept of package.
+	"""
+	for e in package.getOwnedElement():
+		print ""
+		if isinstance(e, Class):		
+			umlClass2OCL(e)
+		elif isinstance(e, Enumeration):		
+			umlEnumeration2OCL(e)
 
 
+for c in selectedElements:
+	print "model " + c.name + "\n"
+	for p in c.getOwnedElement():
+		package2OCL(p)
 
 
 #---------------------------------------------------------
