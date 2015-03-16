@@ -43,13 +43,7 @@ Additional observations could go there
 
 # example
 def isAssociationClass(element):
-    """ 
-    Return True if and only if the element is an association 
-    that have an associated class, or if this is a class that
-    has a associated association. (see the Modelio metamodel
-    for details)
-    """
-    # TODO
+	return element.getLinkToAssociation() != None
     
  
 #---------------------------------------------------------
@@ -63,13 +57,13 @@ def isAssociationClass(element):
 
 # example
 def associationsInPackage(package):
-    """
-    Return the list of all associations that start or
-    arrive to a class which is recursively contained in
-    a package.
-    """
-    
-
+	toReturn = []
+	for e in package.getOwnedElement():
+		if isinstance(e, Class):
+			for t in e.targetingEnd:
+				if t.association not in toReturn and t.association.getLinkToClass() == None:
+					toReturn.append(t.association)
+	return toReturn
     
 #---------------------------------------------------------
 #   Helpers for the target representation (text)
@@ -130,6 +124,15 @@ def umlClass2OCL(umlClass):
 		print "\t" + a.name + " : " + umlBasicType2OCL(a.type) + (" -- @derived" if a.isDerived else "")
 	print "end"
 
+def umlAssociationClass2OCL(umlClass):
+	print "associationclass " + umlClass.name + " between"
+	for linkAss in umlClass.getLinkToAssociation().associationPart.end :
+		print "\t" + linkAss.target.name + "[" + linkAss.multiplicityMin + ".." + linkAss.multiplicityMax + "] role " + linkAss.name
+	print "attributes"
+	for a in umlClass.ownedAttribute:
+		print "\t" + a.name + " : " + umlBasicType2OCL(a.type) + (" -- @derived" if a.isDerived else "")
+	print "end"
+
 def package2OCL(package):
 	"""
 	Generate a complete OCL specification for a given package.
@@ -143,11 +146,24 @@ def package2OCL(package):
 	"""
 	for e in package.getOwnedElement():
 		print ""
-		if isinstance(e, Class):		
-			umlClass2OCL(e)
+		if isinstance(e, Class):
+			if isAssociationClass(e):
+				umlAssociationClass2OCL(e)
+			else:
+				umlClass2OCL(e)
 		elif isinstance(e, Enumeration):		
 			umlEnumeration2OCL(e)
 
+	for a in associationsInPackage(package):
+		print ""
+		type = "association "
+		if a.end[0].getAggregation().name == "KindIsComposition" or a.end[1].getAggregation().name == "KindIsComposition":
+			type = "composition "
+		print type + a.name + " between"
+		for i in a.end:
+			print "\t" + i.target.name + "[" + i.multiplicityMin + ".." + i.multiplicityMax + "] role " + i.name
+		print "end"
+		
 
 for c in selectedElements:
 	print "model " + c.name + "\n"
