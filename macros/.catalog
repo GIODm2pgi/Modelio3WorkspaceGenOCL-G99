@@ -17,7 +17,10 @@
 <script name="&gt;&gt; Run" path="OnlinePyScript-Run.py" icon-path="" show-menu="true" show-toolbar="true">
 <description></description>
 </script>
-<script name="xml2modelio" path="xml2modelio.py" icon-path="" show-menu="true" show-toolbar="true">
+<script name="project_IDM_xml2modelio" path="project_IDM_xml2modelio.py" icon-path="" show-menu="true" show-toolbar="true">
+<description></description>
+</script>
+<script name="project_IDM_modelio2sql" path="project_IDM_modelio2sql.py" icon-path="" show-menu="true" show-toolbar="true">
 <description></description>
 </script>
 </catalog>

@@ -1,4 +1,33 @@
+MODULES_TO_RELOAD = ["modelioscriptor"]
+
+def startup():
+  try:
+    from org.modelio.api.modelio import Modelio
+    orgVersion = True
+  except:
+    orgVersion = False
+  import os
+  import sys 
+  WORKSPACE_DIRECTORY=Modelio.getInstance().getContext().getWorkspacePath().toString()
+  if orgVersion:
+    MACROS_DIRECTORY=os.path.join(WORKSPACE_DIRECTORY,'macros')
+  else:
+    MACROS_DIRECTORY=os.path.join(WORKSPACE_DIRECTORY,'.config','macros')
+  SCRIPT_LIBRARY_DIRECTORY=os.path.join(MACROS_DIRECTORY,'lib')
+  sys.path.extend([MACROS_DIRECTORY,SCRIPT_LIBRARY_DIRECTORY])
+
+try:
+  CO_EXPLORER_EXECUTION += 1
+except:
+  CO_EXPLORER_EXECUTION = 1
+  startup()    
+
+if "modelioscriptor" in MODULES_TO_RELOAD:
+  try: del sys.modules["modelioscriptor"] ; del modelioscriptor
+  except: pass
 from modelioscriptor import *
+
+###############################################################################
 
 def sqlType2ModelioType (t):
 	types = theSession().getModel().getUmlTypes()
@@ -51,7 +80,7 @@ def doService (myp, root):
 			if isTable:
 				c.addStereotype("LocalModule", "Table")
 		for a in dictAttribs.keys():
-			ass = fact.createDependency(dictAttribs[a]['parent'].getOwner(), dictAttribs[a]['child'].getOwner(), "LocalModule", "FKC")
+			ass = fact.createDependency(dictAttribs[a]['parent'], dictAttribs[a]['child'], "LocalModule", "FKC")
 		trans.commit()
 	except:
 		trans.rollback()
@@ -61,19 +90,19 @@ print "Start."
 
 myp = None
 try:
-	myp = instanceNamed(Package,"MyPackage")
+	myp = instanceNamed(Package,"PackageScribeSQL")
 except:	
-	print "[Error] The package named 'MyPackage' doesn't exist and need to be created."
+	print "[Error] The package named 'PackageScribeSQL' doesn't exist and need to be created."
 
 import os
-INPUT_DIRECTORY = Modelio.getInstance().getContext().getWorkspacePath().toString() + "/macros/lib/res/xmlSQL/"
+INPUT_DIRECTORY = Modelio.getInstance().getContext().getWorkspacePath().toString() + "/macros/lib/res/xml/"
 
 tree = None
 import xml.etree.ElementTree as ET
 try:
-	tree = ET.parse(INPUT_DIRECTORY + "library.xml")
+	tree = ET.parse(INPUT_DIRECTORY + "bdd.xml")
 except:
-	print "[Error] The xml input file named 'library.xml' can't be found and need to be put in <$WORKSPACE/macros/lib/res/xmlSQL/>."
+	print "[Error] The xml input file named 'bdd.xml' can't be found and need to be put in <$WORKSPACE/macros/lib/res/xml/>."
 
 neededStereo = []
 neededStereo.append({'name': 'PK', 'base': 'Attribute'})
@@ -96,7 +125,7 @@ if tree != None and myp != None and allStereoAvailable == True:
 		isEmpty = False		
 		o.delete()
 	if isEmpty == False:
-		print "[Warning] The package was not empty. All the classes in 'MyPackage' has been removed."
+		print "[Warning] The package was not empty. All the classes in 'PackageScribeSQL' has been removed."
 	doService(myp, tree.getroot())
 	print "End."
 else:
